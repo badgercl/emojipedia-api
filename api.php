@@ -2,6 +2,7 @@
 require 'vendor/autoload.php';
 
 function cleanHTML($html){
+	$html = str_replace("&nbsp;", " ", $html);
 	return preg_replace("/&#?[a-z0-9]+;/i","",$html);
 }
 
@@ -27,34 +28,47 @@ $vendors = $dom->querySelector('.vendor-list');
 $description = $article->querySelector('.description');
 
 $out['title'] = $article->querySelector('h1')->textContent;
-$p = $description->querySelectorAll('p');
-$out['description'] = cleanHTML($p[0]->innerHTML);
-$out['approved'] = str_replace( "\n", ' ', trim($p[1]->textContent));
+//$p = $description->querySelectorAll('p');
+//$out['description'] = cleanHTML($description->textContent);
+//$out['description'] = cleanHTML($p[0]->innerHTML);
+//$out['approved'] = str_replace( "\n", ' ', trim($p[1]->textContent));
+
+
+$desc = "";
+$ps = $description->querySelectorAll('p');
+foreach($ps as $p){
+	$desc .= cleanHTML($p->innerHTML) . "<br>";	
+}
+$out['description'] = $desc;
 
 if($unicode){
 	$p = $unicode->querySelector('p');
 	$out['unicode_name'] = $p->textContent;
 }
 
-$tmp = [];
-$lis = $aliases->querySelectorAll('li');
-foreach($lis as $li){
-	$tmp[] = $li->textContent;	
+if($aliases){
+	$tmp = [];
+	$lis = $aliases->querySelectorAll('li');
+	foreach($lis as $li){
+		$tmp[] = $li->textContent;	
+	}
+	$out['aliases'] = $tmp;
 }
-$out['aliases'] = $tmp;
 
-$tmp = [];
-$lis = $vendors->querySelectorAll('li');
-foreach($lis as $li){
-	$v = [];
-	$h2 = $li->querySelector('h2');
-	if(!$h2) continue;
-	$v['name'] = $h2->textContent; 
-	$img = $li->querySelectorAll('img')[1]->getAttribute('src');
-	$v['img'] = $img;
-	$tmp[] = $v;
+if($vendors){
+	$tmp = [];
+	$lis = $vendors->querySelectorAll('li');
+	foreach($lis as $li){
+		$v = [];
+		$h2 = $li->querySelector('h2');
+		if(!$h2) continue;
+		$v['name'] = $h2->textContent; 
+		$img = $li->querySelectorAll('img')[1]->getAttribute('src');
+		$v['img'] = $img;
+		$tmp[] = $v;
+	}
+	$out['vendors'] = $tmp;
 }
-$out['vendors'] = $tmp;
 
 header('Content-type: application/json');
-print_r($out);
+echo json_encode($out);
