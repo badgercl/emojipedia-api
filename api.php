@@ -12,9 +12,28 @@ function error($txt, $code){
 	die();
 }
 
+function search($q) {
+	$q = mb_substr($q, 0, 1);
+	$url = "https://emojipedia.org/search/?q=".$q;
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_HEADER, TRUE);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+	$a = curl_exec($ch);
+	if(preg_match('#Location: (.*)#', $a, $r))
+	$l = "https://emojipedia.org".trim($r[1]);
+	return $l;
+}
+
 if(!isset($_GET['q'])) error("Invalid Parameters", 400); 
 $out = [];
-$url = "https://emojipedia.org/".$_GET['q'];
+$url = search($_GET['q']);
+if(!$url) {
+	error("Nothing found", 400);
+	return;
+} 
+
 $res = @file_get_contents($url);
 if(!$res) error('Invalid parameters', 400);
 
